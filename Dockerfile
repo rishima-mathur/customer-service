@@ -1,19 +1,11 @@
-# Stage 1: Build
-FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
-WORKDIR /src
+FROM python:3.11-slim
 
-# Copy everything under src folder
-COPY ./src ./src
-
-# Restore dependencies
-RUN dotnet restore "./src/CustomerService.API/CustomerService.API.csproj"
-
-# Build and publish
-WORKDIR /src/src/CustomerService.API
-RUN dotnet publish "CustomerService.API.csproj" -c Release -o /app/publish
-
-# Stage 2: Runtime
-FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
 WORKDIR /app
-COPY --from=build /app/publish .
-ENTRYPOINT ["dotnet", "CustomerService.API.dll"]
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+COPY app ./app
+
+CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
